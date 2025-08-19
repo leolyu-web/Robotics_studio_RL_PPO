@@ -2,7 +2,7 @@
 
 This repository demonstrates how to train a simulated "Ant" robot using Proximal Policy Optimization (PPO), a reinforcement learning algorithm. It includes three different training scenarios: a basic implementation, one that encourages the ant to walk in a straight line, and an advanced version where the ant learns to walk on uneven terrain.
 
-![Animated demonstration of the ant simulation](demo_gif/demo_gif.gif)
+<img src="demo_gif/demo_gif.gif" alt="Animated demonstration of the ant simulation" width="800"/>
 ## Scenarios
 
 ### 1. Basic Ant (`main_basic.py`)
