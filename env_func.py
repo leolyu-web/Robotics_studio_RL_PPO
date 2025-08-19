@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 def create_uneven_terrain(output_dir=".", size=(128, 128), max_height=2, terrain_size=(30, 30)):
     """
-    Generates a heightfield PNG and a custom MuJoCo XML with a checkerboard texture.
+    Generates a heightfield PNG and a custom MuJoCo XML with a black and blue checkerboard texture.
     """
     image_path_rel = "terrain.png"
     image_path_abs = os.path.abspath(os.path.join(output_dir, image_path_rel))
@@ -48,16 +48,21 @@ def create_uneven_terrain(output_dir=".", size=(128, 128), max_height=2, terrain
         asset = ET.Element("asset")
         root.insert(2, asset)
 
-    # --- EDIT START: Modify the material for better tiling on the new terrain ---
-    # Find the material that uses the checkerboard texture. In ant.xml, it's 'MatPlane'.
+    # Find the checkerboard texture named 'texplane'
+    texture_plane = asset.find("./texture[@name='texplane']")
+    if texture_plane is not None:
+        # Set the two RGB colors of the checkerboard pattern
+        texture_plane.set("rgb1", "0.0 0.0 0.0")  # Black
+        texture_plane.set("rgb2", "1.0 1.0 1.0") 
+        print("Modified 'texplane' texture colors to black and blue.")
+    # --- END OF CHANGES ---
+
+    # Modify the material for better tiling on the new terrain
     matplane = asset.find("./material[@name='MatPlane']")
     if matplane is not None:
-        # Change the texrepeat attribute. The original value is for a very large plane.
-        # A smaller value like "15 15" will create a reasonably sized checker pattern
-        # on our 30x30 terrain. You can adjust these numbers to make the squares larger or smaller.
+        matplane.set("rgba", "1 1 1 1")
         matplane.set("texrepeat", "15 15")
         print("Modified 'MatPlane' material to repeat texture 15x15 on the new terrain.")
-    # --- EDIT END ---
 
     # Add the hfield definition to the asset block
     ET.SubElement(
@@ -67,7 +72,6 @@ def create_uneven_terrain(output_dir=".", size=(128, 128), max_height=2, terrain
     )
     
     # Add the new hfield geom to the worldbody.
-    # It will use the modified 'MatPlane' material to show the checkerboard.
     ET.SubElement(
         worldbody, "geom",
         attrib={
@@ -78,6 +82,6 @@ def create_uneven_terrain(output_dir=".", size=(128, 128), max_height=2, terrain
 
     # Write the modified XML to a new file
     tree.write(xml_path, encoding="unicode")
-    print(f"Custom XML with checkerboard terrain created at {xml_path}.")
+    print(f"Custom XML with black and blue terrain created at {xml_path}.")
 
     return os.path.abspath(xml_path)
