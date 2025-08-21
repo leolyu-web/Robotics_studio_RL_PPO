@@ -26,16 +26,47 @@ This is the most complex scenario. The ant is trained on a custom-generated unev
     * Custom termination conditions based on the ant's height and orientation to ensure it stays upright and on the terrain.
     * The ability to set a custom initial starting position for the ant.
 
+
 ## How to Run
 
-To run any of the scenarios, execute the corresponding Python script from your terminal:
+You can run each scenario directly from your terminal. The scripts utilize command-line arguments to switch between **evaluation** and **training** modes.
 
-```bash
-# For the basic Ant
-python main_basic.py
+### Evaluating a Model
 
-# For the straight-walking Ant
-python main_straight.py
+**The models have already been trained.** You can immediately run the evaluation commands below to see the pre-trained agents in action.
 
-# For the advanced Ant on uneven terrain
-python main_advanced.py
+* **Basic Ant:**
+    ```bash
+    python main_basic.py
+    ```
+
+* **Straight-Walking Ant:**
+    ```bash
+    python main_straight.py
+    ```
+
+* **Advanced Ant on Uneven Terrain:**
+    ```bash
+    python main_advanced.py
+    ```
+
+---
+
+### Training a Model (Optional)
+
+If you wish to train a model from scratch or experiment with different parameters, use the `--train` flag. Running these commands will overwrite the existing pre-trained models.
+
+* **Basic Ant:**
+    ```bash
+    python main_basic.py --train --timesteps 500000
+    ```
+
+* **Straight-Walking Ant:**
+    ```bash
+    python main_straight.py --train --timesteps 1000000 --forward_weight 2.0 --sideways_penalty 1.0
+    ```
+
+* **Advanced Ant on Uneven Terrain:**
+    ```bash
+    python main_advanced.py --train --timesteps 2000000 --forward_weight 0.5 --sideways_penalty 0.2
+    ```

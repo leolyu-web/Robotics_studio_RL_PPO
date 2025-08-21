@@ -6,6 +6,7 @@ import time
 import numpy as np
 from scipy.spatial.transform import Rotation
 from env.env_func import create_uneven_terrain
+import argparse
 
 
 class CustomAntWrapper(gym.Wrapper):
@@ -110,6 +111,16 @@ class CustomAntWrapper(gym.Wrapper):
 
 
 def main():
+    #set the mode and parameter using argparse
+    parser = argparse.ArgumentParser(description="Train or evaluate a PPO model for a custom Ant environment.")
+    parser.add_argument('--train', action='store_true', help='Flag to train a new model. If not set, evaluates an existing model.')
+    parser.add_argument('--timesteps', type=int, default=2000000, help='Total number of timesteps for training.')
+    parser.add_argument('--forward_weight', type=float, default=0.4, help='Weight for the forward motion reward.')
+    parser.add_argument('--sideways_penalty', type=float, default=0.1, help='Weight for the sideways motion penalty.')
+    parser.add_argument('--healthy_reward', type=float, default=1.0, help='Weight for the sideways motion penalty.')
+    args = parser.parse_args()
+    
+
     custom_xml_path = create_uneven_terrain(max_height=1.5)
 
     log_dir = "/tmp/gym/"
@@ -119,10 +130,9 @@ def main():
 
     model_path = os.path.join(model_dir, "ppo_ant_advanced")
 
-    TRAIN_MODEL = False
     start_pos = (-1, 0, 1.25)
 
-    if TRAIN_MODEL:
+    if args.train:
         print("\nCreating custom uneven environment and starting training...")
 
         def make_env():
@@ -130,9 +140,9 @@ def main():
             
             # Pass all custom parameters to the wrapper
             wrapped_env = CustomAntWrapper(base_env, 
-                                           forward_weight=1.2,    
-                                           sideways_penalty_weight=0.2,
-                                           healthy_reward=1.0,
+                                           forward_weight=args.forward_weight,    
+                                           sideways_penalty_weight=args.sideways_penalty,
+                                           healthy_reward=args.healthy_reward,
                                            initial_pos=start_pos,
                                            healthy_z_range=(-3.0, 3.0),
                                            orientation_threshold=-0.5)
@@ -154,7 +164,7 @@ def main():
             tensorboard_log=log_dir
         )
 
-        total_timesteps = 2000000
+        total_timesteps = args.timesteps
         print(f"Training model for {total_timesteps} timesteps on uneven terrain...")
         model.learn(total_timesteps=total_timesteps)
 
@@ -183,12 +193,12 @@ def main():
 
         # Apply the wrapper with all customizations
         eval_env = CustomAntWrapper(base_env, 
-                                   forward_weight=0.4,    
-                                   sideways_penalty_weight=0.1,
-                                   healthy_reward=1.0,
-                                   initial_pos=start_pos,
-                                   healthy_z_range=(-3.0, 3.0),
-                                   orientation_threshold=-0.5)
+                                    forward_weight=args.forward_weight,    
+                                    sideways_penalty_weight=args.sideways_penalty,
+                                    healthy_reward=args.healthy_reward,
+                                    initial_pos=start_pos,
+                                    healthy_z_range=(-3.0, 3.0),
+                                    orientation_threshold=-0.5)
 
         obs, info = eval_env.reset()
 
