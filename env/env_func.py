@@ -9,9 +9,9 @@ def create_uneven_terrain(output_dir=".", size=(128, 128), max_height=2, terrain
     """
     Generates a heightfield PNG and a custom MuJoCo XML with a black and blue checkerboard texture.
     """
-    image_path_rel = "terrain.png"
+    image_path_rel = "env/terrain.png"
     image_path_abs = os.path.abspath(os.path.join(output_dir, image_path_rel))
-    xml_path = os.path.join(output_dir, "ant_uneven.xml")
+    xml_path = os.path.join(output_dir, "env/ant_uneven.xml")
 
     # --- Step 1: Generate the heightfield image (No change here) ---
     print(f"Generating heightfield image at {image_path_abs}...")

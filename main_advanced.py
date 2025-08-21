@@ -5,7 +5,7 @@ import os
 import time
 import numpy as np
 from scipy.spatial.transform import Rotation
-from env_func import create_uneven_terrain
+from env.env_func import create_uneven_terrain
 
 
 class CustomAntWrapper(gym.Wrapper):
@@ -130,8 +130,8 @@ def main():
             
             # Pass all custom parameters to the wrapper
             wrapped_env = CustomAntWrapper(base_env, 
-                                           forward_weight=0.4,    
-                                           sideways_penalty_weight=0.1,
+                                           forward_weight=1.2,    
+                                           sideways_penalty_weight=0.2,
                                            healthy_reward=1.0,
                                            initial_pos=start_pos,
                                            healthy_z_range=(-3.0, 3.0),
