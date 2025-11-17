@@ -1,72 +1,142 @@
-# Robotics Studio RL PPO Demo
+# Ant Robot Control Demos
 
-This repository demonstrates how to train a simulated "Ant" robot using Proximal Policy Optimization (PPO), a reinforcement learning algorithm. It includes three different training scenarios: a basic implementation, one that encourages the ant to walk in a straight line, and an advanced version where the ant learns to walk on uneven terrain.
+This repository explores two methods for controlling a MuJoCo "Ant" robot:
+1.  **Parameter Optimization:** Using simple algorithms (Random Search, Hill Climbing) to find optimal parameters.
+2.  **Reinforcement Learning (PPO):** Using Stable-Baselines3 to train a neural network policy through trial and error.
 
 <img src="assets/demo_gif/demo_gif.gif" alt="Animated demonstration of the ant simulation" width="800"/>
-## Scenarios
-
-### 1. Basic Ant (`main_basic.py`)
-
-This is a standard implementation of the Ant environment from the Gymnasium library. The goal is to get the ant to walk forward as far as possible without falling over.
-
-### 2. Straight-Walking Ant (`main_straight.py`)
-
-This scenario modifies the reward function to encourage the ant to walk in a straight line. It does this by:
-* **Rewarding forward velocity**: The ant gets a higher reward for moving forward (positive x-velocity).
-* **Penalizing sideways velocity**: The ant is penalized for any sideways movement (y-velocity).
-
-This results in a more stable and efficient gait compared to the basic implementation.
-
-### 3. Advanced Ant on Uneven Terrain (`main_advanced.py`)
-
-This is the most complex scenario. The ant is trained on a custom-generated uneven terrain. The key features of this implementation are:
-* **Custom Environment**: A Python script (`env_func.py`) generates a heightfield image (`terrain.png`) and a MuJoCo XML file (`ant_uneven.xml`) to create the uneven terrain.
-* **Custom Wrapper**: A `CustomAntWrapper` class is used to modify the environment's behavior. This includes:
-    * A reward function that encourages forward movement and penalizes sideways movement, similar to the straight-walking ant.
-    * Custom termination conditions based on the ant's height and orientation to ensure it stays upright and on the terrain.
-    * The ability to set a custom initial starting position for the ant.
-
-
-## How to Run
-
-You can run each scenario directly from your terminal. The scripts utilize command-line arguments to switch between **evaluation** and **training** modes.
-
-### Evaluating a Model
-
-**The models have already been trained.** You can immediately run the evaluation commands below to see the pre-trained agents in action.
-
-* **Basic Ant:**
-    ```bash
-    python main_basic.py
-    ```
-
-* **Straight-Walking Ant:**
-    ```bash
-    python main_straight.py
-    ```
-
-* **Advanced Ant on Uneven Terrain:**
-    ```bash
-    python main_advanced.py
-    ```
 
 ---
 
-### Training a Model (Optional)
+## Part 1: Parameter Optimization
 
-If you wish to train a model from scratch or experiment with different parameters, use the `--train` flag. Running these commands will overwrite the existing pre-trained models.
+This method uses optimization algorithms (Random Search, Hill climber) to find the best set of parameters to make the ant walk.
 
-* **Basic Ant:**
+* **Script:** `params_optim/params_optim.py`
+* **World:** `assets/ant_pos_ctrl.xml` (Uses position-based actuators)
+* **Best Parameters:** Saved in `params_optim/params/`
+
+---
+
+## Part 2: Reinforcement Learning (PPO)
+
+This method uses PPO to train policies for different tasks. All models are pre-trained and saved in the `PPO_model/` directory.
+
+### Basic Ant (Flat Terrain)
+* **Goal:** Learns to walk forward on a flat plane.
+* **World:** `assets/ant.xml`
+* **Scripts:** `train.py`, `evaluate.py`
+* **Model:** `PPO_model/ppo_myant_model.zip`
+
+### Circle-Walking Ant (Flat Terrain)
+* **Goal:** Uses a `CircleRewardWrapper` to reward turning (yaw velocity), encouraging circular motion.
+* **World:** `assets/ant.xml`
+* **Script:** `wrapper_train.py` (contains the custom wrapper) , `evaluate.py` (need to modified the path)
+* **Model:** `PPO_model/ppo_myant_circle_model.zip`
+
+### Uneven Terrain Ant
+* **Goal:** Trains the ant to walk on uneven terrain using a custom `uneven_Wrapper` for height randomization and orientation checks.
+* **World:** `assets/ant_uneven.xml` (uses `assets/terrain_1.png`)
+* **Scripts:** `uneven_train.py`, `evaluate_uneven.py`
+* **Model:** `PPO_model/ppo_myant_uneven_model.zip`
+
+---
+## How to Run
+
+
+### Part 1: Parameter Optimization
+
+This method uses the `params_optim/params_optim.py` script, which takes commands to either `visualize` (evaluate) or `train` a set of CPG parameters.
+
+#### Evaluate (Visualize Parameters)
+
+This loads the `.json` parameter files from `params_optim/params/` and runs them in the simulator.
+
+* **Visualize Random Search Policy:**
     ```bash
-    python main_basic.py --train --timesteps 500000
+    python params_optim/params_optim.py visualize random
     ```
 
-* **Straight-Walking Ant:**
+* **Visualize Hill Climber Policy:**
     ```bash
-    python main_straight.py --train --timesteps 1000000 --forward_weight 2.0 --sideways_penalty 1.0
+    python params_optim/params_optim.py visualize hill
     ```
 
-* **Advanced Ant on Uneven Terrain:**
+* **Visualize Best Policy (Combined):**
+    This is the default and shows the best result from the combined RS+HC training.
     ```bash
-    python main_advanced.py --train --timesteps 2000000 --forward_weight 0.5 --sideways_penalty 0.2
+    python params_optim/params_optim.py visualize combined
+    ```
+
+#### Train (from Scratch)
+
+* **Train All Methods & Compare (Default):**
+    Runs Random Search, Hill Climber, and a combined (RS+HC) approach, each for 20,000 iterations. It saves all resulting parameters and a final `comparison_learning_curve.png` plot.
+    ```bash
+    python params_optim/params_optim.py train
+    ```
+
+* **Train Only One Method:**
+    You can also choose to run only one specific algorithm. This will run the chosen method for 20,000 iterations and save its corresponding parameter file.
+
+    ```bash
+    # Run only Random Search
+    python params_optim/params_optim.py train random
+
+    # Run only Hill Climber
+    python params_optim/params_optim.py train hill
+
+    # Run only the Combined (10k RS + 10k HC) method
+    python params_optim/params_optim.py train combined
+    ```
+
+
+### Part 2: Reinforcement Learning (PPO)
+
+These scripts use `stable_baselines3` to load or train neural network policies.
+
+#### Evaluate (Pre-trained Models)
+
+* **Basic Ant (Flat Terrain)**
+    Runs the pre-trained model for walking on a flat plane.
+    ```bash
+    python evaluate.py
+    ```
+
+* **Uneven Terrain Ant**
+    Runs the pre-trained model on the uneven terrain world.
+    ```bash
+    python evaluate_uneven.py
+    ```
+
+* **Circle-Walking Ant**
+    This model uses the basic `evaluate.py` script with one modification:
+    1.  Open `evaluate.py`.
+    2.  Find the line: `model = PPO.load("PPO_model/ppo_myant_model.zip")`.
+    3.  Change it to load the circle model: `model = PPO.load("PPO_model/ppo_myant_circle_model.zip")`.
+    4.  Save the file and run it:
+        ```bash
+        python evaluate.py
+        ```
+
+#### Train (from Scratch)
+
+**Note:** Running these scripts will overwrite the pre-trained models in the `PPO_model/` directory.
+
+* **Basic Ant (Flat Terrain)**
+    Trains the basic ant and saves the result as `ppo_myant_model.zip`.
+    ```bash
+    python train.py
+    ```
+
+* **Circle-Walking Ant (Flat Terrain)**
+    Trains the ant using the `CircleRewardWrapper` and saves as `ppo_myant_circle_model.zip`.
+    ```bash
+    python wrapper_train.py
+    ```
+
+* **Uneven Terrain Ant**
+    Trains the ant using the `uneven_Wrapper` on the rugged terrain and saves as `ppo_myant_uneven_model.zip`.
+    ```bash
+    python uneven_train.py
     ```
